@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "SockPilot",
   "short_name": "SockPilot",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Authenticated SOCKS5 proxy for Brave and Chromium via a local bridge. No system proxy changes.",
   "permissions": [
     "proxy",

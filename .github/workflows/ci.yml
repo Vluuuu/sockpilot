@@ -25,6 +25,8 @@ jobs:
         run: |
           node --check bridge/bridge.js
           node --check bridge/socks.js
+          node --check bridge/public-ip.js
+          node --check extension/quick-import.js
           node --check extension/background.js
           node --check extension/popup.js
           node --check test/bridge.test.js

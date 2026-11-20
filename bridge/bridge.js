@@ -5,11 +5,31 @@ const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 const { openSocks, validateConfig } = require('./socks');
+const { getPublicIp } = require('./public-ip');
 
 const HOST = '127.0.0.1';
 const PROXY_PORT = 18080;
 const CONTROL_PORT = 18081;
 const MAX_BODY_BYTES = 4096;
+
+function validPort(number) {
+  return Number.isInteger(number) && number >= 1 && number <= 65535;
+}
+
+// Both ports persist on disk and can be edited between bridge runs.
+function loadBridgeSettings() {
+  const directory = path.join(__dirname, '.local');
+  const filename = path.join(directory, 'bridge-settings.json');
+  fs.mkdirSync(directory, { recursive: true, mode: 0o700 });
+  if (!fs.existsSync(filename)) {
+    fs.writeFileSync(filename, JSON.stringify({ proxyPort: PROXY_PORT, controlPort: CONTROL_PORT }, null, 2) + '\n', { mode: 0o600, flag: 'wx' });
+  }
+  const value = JSON.parse(fs.readFileSync(filename, 'utf8'));
+  if (!validPort(value.proxyPort) || !validPort(value.controlPort) || value.proxyPort === value.controlPort) {
+    throw new Error('Port di bridge/.local/bridge-settings.json tidak valid atau sama.');
+  }
+  return { proxyPort: value.proxyPort, controlPort: value.controlPort };
+}
 
 function loadToken() {
   const directory = path.join(__dirname, '.local');
@@ -35,7 +55,7 @@ function json(res, status, object) {
   res.end(value);
 }
 
-function createBridge({ token, proxyPort = PROXY_PORT, controlPort = CONTROL_PORT } = {}) {
+function createBridge({ token, proxyPort = PROXY_PORT, controlPort = CONTROL_PORT, ipLookup = getPublicIp } = {}) {
   if (!token) throw new Error('Pairing key wajib tersedia.');
   let config = null;
 
@@ -57,9 +77,9 @@ function createBridge({ token, proxyPort = PROXY_PORT, controlPort = CONTROL_POR
     }
     if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
     if (req.method === 'GET' && req.url === '/health') {
-      return json(res, 200, { ok: true, configured: Boolean(config), proxyPort, version: '1.0.0' });
+      return json(res, 200, { ok: true, configured: Boolean(config), proxyPort: proxy.address()?.port || proxyPort, controlPort: actualPort, version: '1.1.0' });
     }
-    if (req.method !== 'POST' || !['/configure', '/disconnect', '/test'].includes(req.url)) {
+    if (req.method !== 'POST' || !['/configure', '/disconnect', '/test', '/ip'].includes(req.url)) {
       return json(res, 404, { ok: false, error: 'Endpoint tidak tersedia.' });
     }
     const provided = String(req.headers.authorization || '').replace(/^Bearer /, '');
@@ -91,6 +111,10 @@ function createBridge({ token, proxyPort = PROXY_PORT, controlPort = CONTROL_POR
         return json(res, 200, { ok: true });
       }
       if (!config) return json(res, 409, { ok: false, error: 'SOCKS5 belum dikonfigurasi.' });
+      if (req.url === '/ip') {
+        const ip = await ipLookup(config);
+        return json(res, 200, { ok: true, ip, source: 'api.ipify.org', viaProxy: true });
+      }
       const link = await openSocks(config, 'example.com', 443);
       link.socket.destroy();
       return json(res, 200, { ok: true, message: 'SOCKS5 CONNECT berhasil.' });
@@ -210,14 +234,16 @@ function createBridge({ token, proxyPort = PROXY_PORT, controlPort = CONTROL_POR
 
 if (require.main === module) {
   try {
-    const bridge = createBridge({ token: loadToken() });
+    const ports = loadBridgeSettings();
+    const bridge = createBridge({ token: loadToken(), ...ports });
     bridge.start().then(() => {
       const token = loadToken();
       console.log('\n===========================================');
-      console.log(' SOCKPILOT · LOCAL BRIDGE 1.0.0');
+      console.log(' SOCKPILOT · LOCAL BRIDGE 1.1.0');
       console.log('===========================================');
-      console.log(' HTTP proxy:  http://127.0.0.1:18080');
-      console.log(' Control API: http://127.0.0.1:18081');
+      console.log(' HTTP proxy:  http://127.0.0.1:' + ports.proxyPort);
+      console.log(' Control API: http://127.0.0.1:' + ports.controlPort);
+      console.log(' Port settings: bridge/.local/bridge-settings.json');
       console.log(' Pairing key (copy into the extension):');
       console.log(' ' + token);
       console.log('\n Keep this window open. Never share the pairing key.');
@@ -229,4 +255,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { createBridge, loadToken };
+module.exports = { createBridge, loadToken, loadBridgeSettings };
