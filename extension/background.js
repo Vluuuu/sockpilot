@@ -19,10 +19,15 @@ async function getProxyState() {
   const setting = await chrome.proxy.settings.get({ incognito: false });
   const current = setting.value || {};
   const proxy = current.rules && current.rules.singleProxy;
+  // Report the actual browser proxy even when a user edits saved ports.
+  // Changing saved ports must never make an active old-port proxy appear "off".
   const ours = current.mode === 'fixed_servers' && proxy &&
-    proxy.scheme === 'http' && proxy.host === PROXY_HOST && proxy.port === proxyPort;
+    proxy.scheme === 'http' && proxy.host === PROXY_HOST &&
+    setting.levelOfControl === 'controlled_by_this_extension';
   return {
     enabled: Boolean(ours),
+    currentProxyPort: ours ? proxy.port : null,
+    matchesSavedPort: Boolean(ours && proxy.port === proxyPort),
     levelOfControl: setting.levelOfControl || 'unknown'
   };
 }

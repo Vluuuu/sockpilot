@@ -72,7 +72,9 @@ async function refresh() {
     const state = await action('state');
     let health;
     try { health = await api('/health'); } catch (_) { health = null; }
-    if (health && health.proxyPort !== getPorts().proxyPort) {
+    if (state.enabled && state.currentProxyPort !== getPorts().proxyPort) {
+      status('Brave masih memakai port lama', 'Aktif: ' + state.currentProxyPort + ' · pilihan baru: ' + getPorts().proxyPort + ' · hubungkan ulang', 'error');
+    } else if (health && health.proxyPort !== getPorts().proxyPort) {
       status('Pengaturan port tidak cocok', 'Port HTTP bridge: ' + health.proxyPort, 'error');
     } else if (state.enabled && health?.configured) {
       status('Proxy aktif di Brave', 'SOCKS5 via bridge · 127.0.0.1:' + health.proxyPort, 'on');
