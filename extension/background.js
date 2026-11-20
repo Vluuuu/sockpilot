@@ -1,7 +1,13 @@
 'use strict';
 
 const PROXY_HOST = '127.0.0.1';
-const PROXY_PORT = 18080;
+const DEFAULT_PROXY_PORT = 18080;
+
+async function configuredPort() {
+  const saved = await chrome.storage.local.get(['bridgeProxyPort']);
+  const port = Number(saved.bridgeProxyPort || DEFAULT_PROXY_PORT);
+  return Number.isInteger(port) && port >= 1 && port <= 65535 ? port : DEFAULT_PROXY_PORT;
+}
 
 async function setBadge(enabled) {
   await chrome.action.setBadgeText({ text: enabled ? 'ON' : '' });
@@ -9,11 +15,12 @@ async function setBadge(enabled) {
 }
 
 async function getProxyState() {
+  const proxyPort = await configuredPort();
   const setting = await chrome.proxy.settings.get({ incognito: false });
   const current = setting.value || {};
   const proxy = current.rules && current.rules.singleProxy;
   const ours = current.mode === 'fixed_servers' && proxy &&
-    proxy.scheme === 'http' && proxy.host === PROXY_HOST && proxy.port === PROXY_PORT;
+    proxy.scheme === 'http' && proxy.host === PROXY_HOST && proxy.port === proxyPort;
   return {
     enabled: Boolean(ours),
     levelOfControl: setting.levelOfControl || 'unknown'
@@ -25,6 +32,10 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
   (async () => {
     if (message.action === 'state') return getProxyState();
     if (message.action === 'connect') {
+      const proxyPort = Number(message.proxyPort || DEFAULT_PROXY_PORT);
+      if (!Number.isInteger(proxyPort) || proxyPort < 1 || proxyPort > 65535) {
+        throw new Error('Port HTTP bridge tidak valid.');
+      }
       const setting = await chrome.proxy.settings.get({ incognito: false });
       if (!['controllable_by_this_extension', 'controlled_by_this_extension'].includes(setting.levelOfControl)) {
         throw new Error('Proxy dikontrol kebijakan browser atau extension lain.');
@@ -34,11 +45,12 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
         value: {
           mode: 'fixed_servers',
           rules: {
-            singleProxy: { scheme: 'http', host: PROXY_HOST, port: PROXY_PORT },
+            singleProxy: { scheme: 'http', host: PROXY_HOST, port: proxyPort },
             bypassList: ['127.0.0.1', 'localhost', '[::1]']
           }
         }
       });
+      await chrome.storage.local.set({ bridgeProxyPort: proxyPort });
       const result = await getProxyState();
       if (!result.enabled) throw new Error('Brave tidak menerapkan proxy lokal.');
       await setBadge(true);

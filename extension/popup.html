@@ -13,7 +13,7 @@
         <div class="brand-icon" aria-hidden="true">SP</div>
         <div><h1>SockPilot</h1><p>SOCKS5 PROXY MANAGER</p></div>
       </div>
-      <span class="version">v1.0</span>
+      <span class="version">v1.1</span>
     </header>
 
     <div class="status-card" aria-live="polite">
@@ -23,6 +23,15 @@
         <small id="status-detail">Menghubungi bridge lokal…</small>
       </div>
       <button id="refresh" class="icon-btn" type="button" title="Muat ulang status" aria-label="Muat ulang status">↻</button>
+    </div>
+
+    <div class="quick-import">
+      <div class="section-label"><span>QUICK IMPORT</span><span class="subtitle">host:port:user:password</span></div>
+      <div class="quick-row">
+        <input id="quick-import" type="password" spellcheck="false" autocomplete="off" aria-label="Tempel proxy host:port:user:password" placeholder="Tempel host:port:user:password" />
+        <button id="parse-quick" type="button">Import</button>
+      </div>
+      <p class="hint">Password boleh mengandung tanda titik dua (:). Input dihapus setelah impor.</p>
     </div>
 
     <form id="connect-form" autocomplete="off">
@@ -48,11 +57,19 @@
       <label class="checkbox-row"><input type="checkbox" id="remember" /><span>Ingat password di profil Brave ini</span></label>
 
       <details class="advanced">
-        <summary>Pengaturan bridge <span>⌄</span></summary>
+        <summary>Pengaturan bridge lokal <span>⌄</span></summary>
         <label class="field">Pairing key
           <input id="token" name="token" required type="password" spellcheck="false" autocomplete="off" placeholder="Salin dari terminal bridge" />
         </label>
-        <p class="hint">Jalankan <code>bridge/start-bridge.cmd</code> dan salin pairing key yang muncul. Key disimpan di profil extension.</p>
+        <div class="field-row">
+          <label class="field grow">Port kontrol
+            <input id="bridge-control-port" type="number" min="1" max="65535" required value="18081" />
+          </label>
+          <label class="field grow">Port HTTP proxy
+            <input id="bridge-proxy-port" type="number" min="1" max="65535" required value="18080" />
+          </label>
+        </div>
+        <p class="hint">Host bridge selalu 127.0.0.1 untuk keamanan. Key dan kedua port tersimpan otomatis di Brave; untuk mengganti port yang dijalankan bridge, edit <code>bridge/.local/bridge-settings.json</code> lalu restart bridge.</p>
       </details>
 
       <div id="notice" class="notice" role="alert" hidden></div>
@@ -61,10 +78,18 @@
         <button class="secondary-btn" id="test" type="button">Uji koneksi</button>
         <button class="secondary-btn" id="disconnect" type="button">Matikan proxy</button>
       </div>
+      <div class="ip-card">
+        <div>
+          <span class="ip-label">IP PUBLIK PROXY</span>
+          <strong id="public-ip">Belum dicek</strong>
+          <small id="ip-note">IP publik melalui SOCKS5</small>
+        </div>
+        <button class="ip-btn" type="button" id="check-ip">Cek IP ↗</button>
+      </div>
     </form>
-
-    <footer><span>Proxy Brave saja · Bukan proxy Windows</span><a href="https://ipinfo.io/" target="_blank" rel="noreferrer">Cek IP ↗</a></footer>
+    <footer><span>Proxy Brave saja · Bukan proxy Windows</span><a href="https://github.com/Vluuuu/sockpilot#quick-start" target="_blank" rel="noreferrer">Panduan ↗</a></footer>
   </main>
+  <script src="quick-import.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>
