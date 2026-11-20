@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SockPilot</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="top">
+      <div class="brand">
+        <div class="brand-icon" aria-hidden="true">SP</div>
+        <div><h1>SockPilot</h1><p>SOCKS5 PROXY MANAGER</p></div>
+      </div>
+      <span class="version">v1.0</span>
+    </header>
+
+    <div class="status-card" aria-live="polite">
+      <div id="status-dot" class="status-dot"></div>
+      <div class="status-copy">
+        <strong id="status-title">Memeriksa koneksi</strong>
+        <small id="status-detail">Menghubungi bridge lokal…</small>
+      </div>
+      <button id="refresh" class="icon-btn" type="button" title="Muat ulang status" aria-label="Muat ulang status">↻</button>
+    </div>
+
+    <form id="connect-form" autocomplete="off">
+      <div class="section-label"><span>SERVER SOCKS5</span><span class="subtitle">TCP · RFC 1929</span></div>
+      <div class="field-row">
+        <label class="field grow">Host
+          <input id="host" name="host" required spellcheck="false" placeholder="proxy.example.com" autocomplete="off" />
+        </label>
+        <label class="field port">Port
+          <input id="port" name="port" required inputmode="numeric" type="number" min="1" max="65535" placeholder="1080" />
+        </label>
+      </div>
+      <div class="section-label small-gap"><span>AUTENTIKASI</span></div>
+      <label class="field">Username
+        <input id="username" name="username" required spellcheck="false" autocomplete="off" placeholder="Username" />
+      </label>
+      <label class="field">Password
+        <span class="password-wrap">
+          <input id="password" name="password" required type="password" autocomplete="new-password" placeholder="Password" />
+          <button class="eye-btn" type="button" id="toggle-password" aria-label="Tampilkan password">Lihat</button>
+        </span>
+      </label>
+      <label class="checkbox-row"><input type="checkbox" id="remember" /><span>Ingat password di profil Brave ini</span></label>
+
+      <details class="advanced">
+        <summary>Pengaturan bridge <span>⌄</span></summary>
+        <label class="field">Pairing key
+          <input id="token" name="token" required type="password" spellcheck="false" autocomplete="off" placeholder="Salin dari terminal bridge" />
+        </label>
+        <p class="hint">Jalankan <code>bridge/start-bridge.cmd</code> dan salin pairing key yang muncul. Key disimpan di profil extension.</p>
+      </details>
+
+      <div id="notice" class="notice" role="alert" hidden></div>
+      <button class="primary-btn" id="connect" type="submit">Hubungkan proxy <span>↗</span></button>
+      <div class="actions-row">
+        <button class="secondary-btn" id="test" type="button">Uji koneksi</button>
+        <button class="secondary-btn" id="disconnect" type="button">Matikan proxy</button>
+      </div>
+    </form>
+
+    <footer><span>Proxy Brave saja · Bukan proxy Windows</span><a href="https://ipinfo.io/" target="_blank" rel="noreferrer">Cek IP ↗</a></footer>
+  </main>
+  <script src="popup.js"></script>
+</body>
+</html>
