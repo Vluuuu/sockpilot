@@ -4,6 +4,15 @@ Changes to SockPilot are recorded here.
 
 ## [Unreleased]
 
+### v1.1.0 — local bridge persistence and IP visibility
+
+- Save pairing key and editable local bridge ports in the browser profile.
+- Persist bridge port settings in `bridge/.local/bridge-settings.json` across process restarts.
+- Import `host:port:username:password` with one paste; support a colon-containing password.
+- Check and show proxy public IP directly in popup through HTTPS over authenticated SOCKS5.
+- Cover quick-import parsing and IP-check API authorization in automated tests.
+
+
 - Public repository setup, contribution and security documentation.
 - SockPilot branding and bundled extension icons.
 - Manifest V3 browser extension with proxy controls and connection status.

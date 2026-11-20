@@ -18,10 +18,12 @@ Include the affected version/commit, operating system, browser version, reproduc
 
 - The extension sets Chromium's **regular-profile** HTTP proxy to the local bridge. It does not set a Windows/system proxy.
 - The Node.js bridge listens on loopback (`127.0.0.1:18080` data proxy and `127.0.0.1:18081` control API). **Any local process may be able to connect to the data proxy.** This is not process-isolated or a security boundary.
-- The control API requires a random pairing key for configuration, test and disconnect actions. The health endpoint reports non-secret status without a key. A malicious local process that can read the token or extension data can control the bridge.
+- The control API requires a random pairing key for configuration, test, proxy public-IP check and disconnect actions. The health endpoint reports non-secret status without a key. A malicious local process that can read the token or extension data can control the bridge.
 - The control API's origin checks are defence-in-depth, **not** a substitute for keeping the pairing key secret.
+- `bridge/.local/bridge-settings.json` contains user-editable listener ports and persists on disk. Apply changes by restarting the bridge. It is gitignored. Both listeners remain bound to loopback.
 - `bridge/.local/pairing-token` persists on disk and is gitignored. Keep it out of backups/shares where possible. Restarting without its token file generates a new key.
 - Upstream SOCKS5 credentials live in the bridge's memory. Opting into **Remember password** stores the password in `chrome.storage.local` in the browser profile, with **no application-level encryption**. Do not use this on shared computers or when untrusted extensions are installed.
+- Clicking **Check IP** causes an HTTPS request to `api.ipify.org` through the authenticated SOCKS5 proxy. That service may observe the resulting IP and request; no direct fallback is used if the proxy fails.
 - SOCKS5 username/password (RFC 1929) does **not** encrypt the authentication exchange. Your proxy operator and network path can observe proxy protocol data. HTTPS protects HTTPS payloads but not all connection metadata.
 - This is an HTTP/HTTPS **TCP** proxy. WebRTC, UDP/QUIC, other applications, DNS prefetching and browser-specific behavior are **not** comprehensively controlled. Do not assume anonymity or IP leak protection.
 - If the bridge is unavailable, browser networking may fail. SockPilot is **not** a verified kill switch. Avoid using it when confidentiality requires guaranteed no-direct fallback.

@@ -106,7 +106,7 @@ test('control API pairing, SOCKS5 auth, HTTP, CONNECT and disconnect', async t =
   const destinationPort = await listen(destination);
   const upstream = mockSocks('demo-user', 'demo-pass', destinationPort);
   const socksPort = await listen(upstream.server);
-  const bridge = createBridge({ token: KEY, proxyPort: 0, controlPort: 0 });
+  const bridge = createBridge({ token: KEY, proxyPort: 0, controlPort: 0, ipLookup: async () => '198.51.100.42' });
   const ports = await bridge.start();
   t.after(async () => {
     await bridge.stop();
@@ -139,6 +139,15 @@ test('control API pairing, SOCKS5 auth, HTTP, CONNECT and disconnect', async t =
 
   const health = await (await fetch('http://127.0.0.1:' + ports.controlPort + '/health')).json();
   assert.equal(health.configured, true);
+  assert.equal(health.proxyPort, ports.proxyPort);
+  assert.equal(health.controlPort, ports.controlPort);
+
+  const deniedIp = await api('/ip', 'wrong');
+  assert.equal(deniedIp.status, 401);
+  const publicIp = await api('/ip', KEY);
+  assert.equal(publicIp.status, 200);
+  assert.equal(publicIp.data.ip, '198.51.100.42');
+  assert.equal(publicIp.data.viaProxy, true);
 
   const responseBody = await new Promise((resolve, reject) => {
     http.get({
@@ -180,4 +189,6 @@ test('control API pairing, SOCKS5 auth, HTTP, CONNECT and disconnect', async t =
   assert.equal(disconnect.status, 200);
   const after = await (await fetch('http://127.0.0.1:' + ports.controlPort + '/health')).json();
   assert.equal(after.configured, false);
+  const ipAfterDisconnect = await api('/ip', KEY);
+  assert.equal(ipAfterDisconnect.status, 409);
 });

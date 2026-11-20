@@ -17,12 +17,25 @@
 3. Salin **pairing key** 48 karakter yang muncul. **Jangan dibagikan.**
 4. Di Brave buka `brave://extensions/`, aktifkan **Developer mode** lalu **Load unpacked**.
 5. Pilih folder **`extension`**, bukan root repo dan bukan ZIP.
-6. Klik ikon SockPilot; masukkan Host tanpa `socks5://`, Port, Username, dan Password.
-7. Buka **Pengaturan bridge**, isi pairing key, lalu klik **Hubungkan proxy**.
-8. Klik **Uji koneksi**, kemudian **Cek IP** untuk memastikan IP publik yang digunakan sesuai harapan.
+6. Klik ikon SockPilot; kamu bisa tempel satu baris `host:port:user:password` di **Quick Import**, lalu klik **Import**. Atau isi Host, Port, Username, Password secara manual.
+7. Buka **Pengaturan bridge**, isi pairing key, lalu klik **Hubungkan proxy**. Pengaturan bridge (pairing key dan port) tersimpan otomatis di profil Brave.
+8. Klik **Uji koneksi**, kemudian **Cek IP**. IP publik proxy akan muncul **langsung di dalam popup**; pengecekan dilakukan melalui SOCKS5 ke `api.ipify.org` menggunakan HTTPS.
 9. Saat ingin berhenti, klik **Matikan proxy** sebelum menutup bridge.
 
-**Catatan:** Restart bridge menghapus kredensial yang disimpan di memorinya. Klik Hubungkan lagi. Password hanya tersimpan di profil extension bila kamu mencentang opsi **Ingat password**.
+**Catatan:** Restart bridge menghapus kredensial SOCKS5 yang tersimpan di memorinya. Klik Hubungkan lagi. Password hanya tersimpan di profil extension bila kamu mencentang **Ingat password**. Walaupun Host, Port, Username, pairing key, dan port bridge tersimpan, kata sandi tetap perlu diisi ulang jika tidak memilih opsi itu.
+
+### Mengubah pengaturan bridge
+
+Bridge otomatis membuat dua file lokal yang diabaikan Git (`bridge/.local/`):
+
+- `pairing-token` — pairing key permanen sampai kamu sengaja mengganti/menghapus file tersebut.
+- `bridge-settings.json` — port default: `proxyPort: 18080`, `controlPort: 18081`.
+
+Untuk mengganti port, hentikan bridge, edit `bridge/.local/bridge-settings.json`, kemudian jalankan ulang `bridge/start-bridge.cmd`. Buka **Pengaturan bridge lokal** di extension dan ubah kedua port agar cocok. Nomor port di extension akan otomatis disimpan untuk sesi berikutnya. Demi keamanan, alamat bridge dikunci ke `127.0.0.1` (localhost), bukan host jaringan lain.
+
+### Quick Import
+
+Contoh **fiktif**: `proxy.example.com:1080:demo-user:demo-pass`. Setelah klik **Import**, keempat kolom terisi otomatis dan teks yang ditempel dihapus dari kotak input. Password dapat mengandung `:`, tetapi username tidak boleh mengandung `:` dalam format satu baris. Untuk host IPv6 gunakan `[2001:db8::1]:1080:user:password`.
 
 ## Alur
 
@@ -56,6 +69,7 @@ Aplikasi lain tidak otomatis ikut menggunakan proxy. Namun aplikasi lokal **bisa
 - **Ingat password** menyimpan password di `chrome.storage.local`, tanpa enkripsi tambahan aplikasi.
 - **Pairing key** melindungi API kontrol, tetapi **bukan port HTTP proxy lokal**.
 - Bridge hanya menerima koneksi dari `127.0.0.1`; jangan pernah mengeksposnya ke jaringan/internet.
+- Tombol **Cek IP** menghubungi `api.ipify.org` melalui proxy SOCKS5; penyedia layanan cek IP dapat mencatat permintaan tersebut. Jika proxy gagal, SockPilot tidak beralih ke koneksi langsung untuk pengecekan IP.
 - SockPilot bukan VPN, tidak menjamin anonimitas atau mengalihkan WebRTC/UDP.
 - Saat bridge mati, koneksi yang memerlukan proxy dapat gagal; tidak ada jaminan kill switch.
 

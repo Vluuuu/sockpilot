@@ -23,8 +23,10 @@ A lightweight open-source browser extension and local Node.js bridge for SOCKS5 
 
 - **Authenticated SOCKS5** — host, port, username and password (RFC 1928 / RFC 1929).
 - **Browser-scoped** — opt in through the extension; no VPN, TUN, drivers or system-wide proxy changes.
-- **Connect / disconnect**, connection test and an external IP-check link.
+- **Connect / disconnect**, connection test, and **public IP directly in the popup** (queried through the authenticated SOCKS5 tunnel using HTTPS).
 - **Local-only companion** — dependency-free Node.js HTTP-to-SOCKS5 bridge bound to `127.0.0.1`.
+- **Quick import** — paste `host:port:username:password` in one step; passwords may contain `:`.
+- **Editable, saved bridge settings** — pairing key and local control/proxy ports persist across browser sessions. Bridge ports are persisted in `bridge/.local/bridge-settings.json` and can be changed between runs.
 - **Pairing key** — protects bridge configuration actions on the local control API.
 - **Privacy-conscious defaults** — no analytics, tracking or hosted relay. The bridge keeps upstream credentials in memory, unless you explicitly choose to remember the password in browser extension storage.
 - **MIT licensed**, testable and easy to audit.
@@ -64,8 +66,10 @@ The popup talks to `127.0.0.1:18081` to configure the bridge. Browser web traffi
 2. Run **`bridge/start-bridge.cmd`** (or `node bridge/bridge.js`). Keep this terminal open. No `npm install` is necessary.
 3. Copy the **pairing key** shown in the terminal. Never publish or share it.
 4. Open `brave://extensions/`, enable **Developer mode**, click **Load unpacked**, and select the **`extension/`** directory.
-5. Open SockPilot in Brave, enter the SOCKS5 **Host, Port, Username, Password**, then enter the **pairing key** under bridge settings.
-6. Click **Connect**, then **Test connection** and **Check IP**. To stop routing Brave traffic, click **Disconnect**.
+5. Open SockPilot in Brave and either paste `host:port:username:password` in **Quick Import**, then click **Import**, or enter the four fields manually. Enter the **pairing key** under bridge settings.
+6. Click **Connect**, then **Test connection** and **Check IP**. The IP address is shown inside the popup. To stop routing Brave traffic, click **Disconnect**.
+
+**Local settings:** The bridge writes the pairing key to `bridge/.local/pairing-token` and creates `bridge/.local/bridge-settings.json` with HTTP proxy port `18080` and control port `18081`. To change the bridge listeners, edit the JSON file, restart the bridge, and update the corresponding ports under **Bridge settings** in the extension. The pairing key and port selections save automatically in the browser profile. SOCKS5 password persistence remains **opt-in**.
 
 See [the detailed Indonesian guide](README.id.md) for troubleshooting.
 
@@ -89,9 +93,10 @@ test/                Local mock SOCKS5 integration tests
 
 - SOCKS5 username/password authentication by itself **is not encrypted** between the bridge and your proxy provider. Use a provider and network you trust; HTTPS still protects HTTPS page content.
 - The bridge binds to loopback, but **other local processes** can access its proxy listener. The pairing key protects the *control API*, **not** the data-plane proxy listener.
-- If **Remember password** is selected, credentials are stored in `chrome.storage.local` **without application-level encryption**. Do not use that option on shared devices.
+- If **Remember password** is selected, the password is stored in `chrome.storage.local` **without application-level encryption**. Otherwise, it is only kept in memory while used and must be re-entered after restarting the bridge or popup. The pairing key persists in local browser storage. Do not use that option on shared devices.
 - The extension changes the browser profile's regular proxy settings. Other profiles, policies and extensions may influence the final behavior. Only Chromium-compatible **TCP** traffic is supported; WebRTC/UDP and other applications are not comprehensively routed.
 - When the bridge stops, proxied browser requests generally fail. **This is not an audited network kill switch.**
+- Clicking **Check IP** contacts `api.ipify.org` through the configured SOCKS5 provider using validated HTTPS and displays the proxy's public IP. The IP-check provider may receive and log that request. **No direct-network fallback** is used when the proxy is unavailable.
 - This is an early community project. Automated integration tests are included; live-browser and real-provider compatibility must be validated separately.
 
 Read [SECURITY.md](SECURITY.md) before relying on SockPilot for privacy-sensitive tasks.
