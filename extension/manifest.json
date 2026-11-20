@@ -4,12 +4,31 @@
   "short_name": "SockPilot",
   "version": "1.0.0",
   "description": "Authenticated SOCKS5 proxy for Brave and Chromium via a local bridge. No system proxy changes.",
-  "permissions": ["proxy", "storage"],
-  "host_permissions": ["http://127.0.0.1/*"],
-  "background": { "service_worker": "background.js" },
+  "permissions": [
+    "proxy",
+    "storage"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "SockPilot"
+    "default_title": "SockPilot",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
   },
-  "minimum_chrome_version": "116"
+  "minimum_chrome_version": "116",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
 }

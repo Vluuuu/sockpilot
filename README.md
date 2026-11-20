@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="extension/icons/icon128.png" width="96" alt="SockPilot logo" />
+
 # 🧭 SockPilot
 
 **Authenticated SOCKS5 for Chromium browsers — without changing your system proxy.**
